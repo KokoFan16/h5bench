@@ -543,6 +543,23 @@ _set_io_pattern(bench_params *params_in_out)
                     printf("%s() failed on line %d\n", __func__, __LINE__);
                 }
             }
+            else if (params_in_out->file_pattern == PATTERN_INPUT){
+            	if (params_in_out->num_dims == 1) {
+            		(*params_in_out).access_pattern.pattern_write = CONTIG_INPUT_1D;
+            	}
+            	else if (params_in_out->num_dims == 2) {
+					(*params_in_out).access_pattern.pattern_write = CONTIG_INPUT_2D;
+					ret                                           = 0;
+				}
+            	else if (params_in_out->num_dims == 3) {
+            		(*params_in_out).access_pattern.pattern_write = CONTIG_INPUT_3D;
+            		ret                                           = 0;
+            	}
+                else {
+                    ret = -1;
+                    printf("%s() failed on line %d\n", __func__, __LINE__);
+                }
+            }
             else {
                 ret = -1;
                 printf("%s() failed on line %d\n", __func__, __LINE__);
@@ -687,6 +704,9 @@ _set_params(char *key, char *val_in, bench_params *params_in_out, int do_write)
         }
         else if (strcmp(val_in, "STRIDED") == 0) {
             params_in_out->file_pattern = PATTERN_STRIDED;
+        }
+        else if (strcmp(val_in, "INPUT") == 0) {
+            params_in_out->file_pattern = PATTERN_INPUT;
         }
         else {
             params_in_out->file_pattern = PATTERN_INVALID;
@@ -935,6 +955,33 @@ _set_params(char *key, char *val_in, bench_params *params_in_out, int do_write)
             return -1;
         }
     }
+    else if (strcmp(key, "X_PATH") == 0) { /// KE
+    	(*params_in_out).x_path = strdup(val);
+    }
+    else if (strcmp(key, "Y_PATH") == 0) { /// KE
+    	(*params_in_out).y_path = strdup(val);
+    }
+    else if (strcmp(key, "Z_PATH") == 0) { /// KE
+    	(*params_in_out).z_path = strdup(val);
+    }
+    else if (strcmp(key, "PX_PATH") == 0) { /// KE
+    	(*params_in_out).px_path = strdup(val);
+    }
+    else if (strcmp(key, "PY_PATH") == 0) { /// KE
+    	(*params_in_out).py_path = strdup(val);
+    }
+    else if (strcmp(key, "PZ_PATH") == 0) { /// KE
+    	(*params_in_out).pz_path = strdup(val);
+    }
+    else if (strcmp(key, "P_D1") == 0) { /// KE
+    	(*params_in_out).P_d1 = atoi(val);
+    }
+    else if (strcmp(key, "P_D2") == 0) { /// KE
+    	(*params_in_out).P_d2 = atoi(val);
+    }
+    else if (strcmp(key, "P_D3") == 0) { /// KE
+    	(*params_in_out).P_d3 = atoi(val);
+    }
     else {
         printf("Unknown Parameter: %s\n", key);
         return -1;
@@ -994,6 +1041,18 @@ bench_params_init(bench_params *params_out)
     (*params_out).align           = 0;
     (*params_out).align_threshold = 0;
     (*params_out).align_len       = 0;
+
+
+    //// KE
+    (*params_out).x_path   = NULL;
+    (*params_out).y_path   = NULL;
+    (*params_out).z_path   = NULL;
+    (*params_out).px_path  = NULL;
+    (*params_out).py_path  = NULL;
+    (*params_out).pz_path  = NULL;
+    (*params_out).P_d1 = 0;
+    (*params_out).P_d2 = 0;
+    (*params_out).P_d3 = 0;
 }
 
 int
@@ -1051,7 +1110,7 @@ read_config(const char *file_path, bench_params *params_out, int do_write)
         }
         else
             return -1;
-        //        printf("key = [%s], val = [%s]\n", tokens[0], tokens[1]);
+//        printf("key = [%s], val = [%s]\n", tokens[0], tokens[1]);
         parsed = _set_params(tokens[0], tokens[1], params_out, do_write);
     }
     if (parsed < 0)

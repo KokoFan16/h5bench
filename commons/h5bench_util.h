@@ -59,6 +59,10 @@ typedef enum write_pattern {
     COMPOUND_CONTIG_2D,
     COMPOUND_COMPOUND_2D,
     CONTIG_CONTIG_3D,
+	///// KE
+	CONTIG_INPUT_1D,
+	CONTIG_INPUT_2D,
+	CONTIG_INPUT_3D
 } write_pattern;
 
 typedef enum read_pattern {
@@ -75,6 +79,8 @@ typedef enum pattern {
     PATTERN_CONTIG,
     PATTERN_INTERLEAVED,
     PATTERN_STRIDED,
+	///// KE
+	PATTERN_INPUT,
 } pattern;
 
 typedef enum io_operation {
@@ -130,6 +136,18 @@ typedef struct bench_params {
     int           align;
     unsigned long align_threshold;
     unsigned long align_len;
+
+    //// KE
+    char *        x_path;
+    char *        y_path;
+    char *        z_path;
+    char *        px_path;
+    char *        py_path;
+    char *        pz_path;
+    int           P_d1;
+    int           P_d2;
+    int           P_d3;
+
 } bench_params;
 
 typedef struct data_md {

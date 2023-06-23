@@ -301,6 +301,233 @@ prepare_data_contig_3D(unsigned long long particle_cnt, long dim_1, long dim_2, 
     return data_out;
 }
 
+////// KE
+int read_file_parallel_1D(char* filename, unsigned long long particle_cnt, float *buf) {
+	MPI_File fh;
+	MPI_Status status;
+
+	int count = 0;
+	MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
+	MPI_Offset offset = MY_RANK * particle_cnt * sizeof(float);
+	MPI_File_read_at(fh, offset, buf, particle_cnt, MPI_FLOAT, &status);
+
+	MPI_Get_count(&status, MPI_FLOAT, &count);
+	if (count != particle_cnt)
+		return -1;
+	else {
+		if (MY_RANK == 0)
+			printf("The file %s has been read successful with %d floats!\n", filename, count);
+	}
+
+	MPI_File_close(&fh);
+	return 1;
+}
+
+///// KE
+data_contig_md* read_data_1D(bench_params params, unsigned long *data_size_out)
+{
+	unsigned long long particle_cnt = params.num_particles;
+    data_contig_md *data_out = (data_contig_md *)malloc(sizeof(data_contig_md));
+    data_out->particle_cnt   = particle_cnt;
+
+    //	if (MY_RANK == 0)
+    //		printf("input_files: %s, %s, %s, %s, %s, %s\n", params.x_path, params.y_path, params.z_path, params.px_path, params.py_path, params.pz_path);
+
+
+    data_out->x     = (float *)malloc(particle_cnt * sizeof(float));
+    data_out->y     = (float *)malloc(particle_cnt * sizeof(float));
+    data_out->z     = (float *)malloc(particle_cnt * sizeof(float));
+    data_out->px    = (float *)malloc(particle_cnt * sizeof(float));
+    data_out->py    = (float *)malloc(particle_cnt * sizeof(float));
+    data_out->pz    = (float *)malloc(particle_cnt * sizeof(float));
+    data_out->id_1  = (int *)malloc(particle_cnt * sizeof(int));
+    data_out->id_2  = (float *)malloc(particle_cnt * sizeof(float));
+    data_out->dim_1 = particle_cnt;
+    data_out->dim_2 = 1;
+    data_out->dim_3 = 1;
+
+    int stat;
+    stat = read_file_parallel_1D(params.x_path, particle_cnt, data_out->x);
+    if (stat < 0) {
+		if (MY_RANK == 0) printf("Fail to read file %s!\n", params.x_path);
+    }
+    stat = read_file_parallel_1D(params.y_path, particle_cnt, data_out->y);
+    if (stat < 0) {
+    	if (MY_RANK == 0) printf("Fail to read file %s!\n", params.y_path);
+    }
+    stat = read_file_parallel_1D(params.z_path, particle_cnt, data_out->z);
+    if (stat < 0) {
+    	if (MY_RANK == 0) printf("Fail to read file %s!\n", params.z_path);
+    }
+    stat = read_file_parallel_1D(params.px_path, particle_cnt, data_out->px);
+    if (stat < 0) {
+    	if (MY_RANK == 0) printf("Fail to read file %s!\n", params.px_path);
+    }
+    stat = read_file_parallel_1D(params.py_path, particle_cnt, data_out->py);
+    if (stat < 0) {
+    	if (MY_RANK == 0) printf("Fail to read file %s!\n", params.py_path);
+    }
+    stat = read_file_parallel_1D(params.pz_path, particle_cnt, data_out->pz);
+    if (stat < 0) {
+    	if (MY_RANK == 0) printf("Fail to read file %s!\n", params.pz_path);
+    }
+
+	for (long i = 0; i < particle_cnt; i++) {
+		data_out->id_1[i] = i;
+		data_out->id_2[i] = (float)(i * 2);
+	}
+
+    *data_size_out = particle_cnt * (7 * sizeof(float) + sizeof(int));
+
+    return data_out;
+}
+
+
+//////// KE
+//int read_file_parallel_3D(char* filename, unsigned long long particle_cnt, float *buf) {
+//	MPI_File fh;
+//	MPI_Status status;
+//
+//	int count = 0;
+//	MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
+//	MPI_Offset offset = MY_RANK * particle_cnt * sizeof(float);
+//	MPI_File_read_at(fh, offset, buf, particle_cnt, MPI_FLOAT, &status);
+//
+//	MPI_Get_count(&status, MPI_FLOAT, &count);
+//	if (count != particle_cnt)
+//		return -1;
+//	else {
+//		if (MY_RANK == 0)
+//			printf("The file %s has been read successful with %d floats!\n", filename, count);
+//	}
+//
+//	MPI_File_close(&fh);
+//	return 1;
+//}
+
+
+
+/////// KE
+//data_contig_md* read_data_3D(bench_params params, unsigned long *data_size_out)
+//{
+//	unsigned long long particle_cnt = params.num_particles;
+//    if (particle_cnt != params.dim_1 * params.dim_2 * params.dim_3) {
+//          if (MY_RANK == 0)
+//              printf("Invalid dimension definition: dim_1(%ld) * dim_2(%ld) * dim_3(%ld) = %ld,"
+//                     " must equal num_particles (%llu) per rank.\n",
+//					 params.dim_1, params.dim_2, params.dim_3, params.dim_1 * params.dim_2 * params.dim_3, particle_cnt);
+//          return NULL;
+//      }
+//
+//      assert(particle_cnt == params.dim_1 * params.dim_2 * params.dim_3);
+//      data_contig_md *data_out = (data_contig_md *)malloc(sizeof(data_contig_md));
+//      data_out->particle_cnt   = particle_cnt;
+//      data_out->dim_1          = params.dim_1;
+//      data_out->dim_2          = params.dim_2;
+//      data_out->dim_3          = params.dim_3;
+//      data_out->x              = (float *)malloc(particle_cnt * sizeof(float));
+//      data_out->y              = (float *)malloc(particle_cnt * sizeof(float));
+//      data_out->z              = (float *)malloc(particle_cnt * sizeof(float));
+//      data_out->px             = (float *)malloc(particle_cnt * sizeof(float));
+//      data_out->py             = (float *)malloc(particle_cnt * sizeof(float));
+//      data_out->pz             = (float *)malloc(particle_cnt * sizeof(float));
+//      data_out->id_1           = (int *)malloc(particle_cnt * sizeof(int));
+//      data_out->id_2           = (float *)malloc(particle_cnt * sizeof(float));
+//
+//
+//    //	if (MY_RANK == 0)
+//    //		printf("input_files: %s, %s, %s, %s, %s, %s\n", params.x_path, params.y_path, params.z_path, params.px_path, params.py_path, params.pz_path);
+//
+//
+////    data_out->x     = (float *)malloc(particle_cnt * sizeof(float));
+////    data_out->y     = (float *)malloc(particle_cnt * sizeof(float));
+////    data_out->z     = (float *)malloc(particle_cnt * sizeof(float));
+////    data_out->px    = (float *)malloc(particle_cnt * sizeof(float));
+////    data_out->py    = (float *)malloc(particle_cnt * sizeof(float));
+////    data_out->pz    = (float *)malloc(particle_cnt * sizeof(float));
+////    data_out->id_1  = (int *)malloc(particle_cnt * sizeof(int));
+////    data_out->id_2  = (float *)malloc(particle_cnt * sizeof(float));
+////    data_out->dim_1 = particle_cnt;
+////    data_out->dim_2 = 1;
+////    data_out->dim_3 = 1;
+////
+////    int stat;
+////    stat = read_file_parallel(params.x_path, particle_cnt, data_out->x);
+////    if (stat < 0) {
+////		if (MY_RANK == 0) printf("Fail to read file %s!\n", params.x_path);
+////    }
+////    stat = read_file_parallel(params.y_path, particle_cnt, data_out->y);
+////    if (stat < 0) {
+////    	if (MY_RANK == 0) printf("Fail to read file %s!\n", params.y_path);
+////    }
+////    stat = read_file_parallel(params.z_path, particle_cnt, data_out->z);
+////    if (stat < 0) {
+////    	if (MY_RANK == 0) printf("Fail to read file %s!\n", params.z_path);
+////    }
+////    read_file_parallel(params.px_path, particle_cnt, data_out->px);
+////    if (stat < 0) {
+////    	if (MY_RANK == 0) printf("Fail to read file %s!\n", params.px_path);
+////    }
+////    read_file_parallel(params.py_path, particle_cnt, data_out->py);
+////    if (stat < 0) {
+////    	if (MY_RANK == 0) printf("Fail to read file %s!\n", params.py_path);
+////    }
+////    read_file_parallel(params.pz_path, particle_cnt, data_out->pz);
+////    if (stat < 0) {
+////    	if (MY_RANK == 0) printf("Fail to read file %s!\n", params.pz_path);
+////    }
+////
+////	for (long i = 0; i < particle_cnt; i++) {
+////		data_out->id_1[i] = i;
+////		data_out->id_2[i] = (float)(i * 2);
+////	}
+////
+////    *data_size_out = particle_cnt * (7 * sizeof(float) + sizeof(int));
+//
+//    return data_out;
+//}
+
+
+
+/* Read file in parallel */
+//static void read_file_parallel()
+//{
+//	data = (unsigned char **)malloc(sizeof(*data) * variable_count);
+//	memset(data, 0, sizeof(*data) * variable_count);
+//
+//	int bytes = (bpv[0]/8) * vps[0];
+//	int size = local_box_size[X] * local_box_size[Y] * local_box_size[Z] * bytes; // Local size
+//
+//	data[0] = (unsigned char *)malloc(sizeof (*(data[0])) * size); // The first variable
+//    MPI_Datatype subarray = create_subarray(); // Self-define MPI data type
+//    MPI_File fh;
+//    MPI_Status status;
+//    int count = 0;
+//
+//    MPI_File_open(MPI_COMM_WORLD, input_file, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
+//    MPI_File_set_view(fh, 0, MPI_CHAR, subarray, "native", MPI_INFO_NULL);
+//    MPI_File_read(fh, data[0], size, MPI_CHAR, &status);
+//    MPI_Get_count(&status, MPI_CHAR, &count);
+//    if (count != size)
+//    	terminate_with_error_msg("ERROR: Read file failed!\n");
+//    else
+//    {
+//    	if (rank == 0)
+//    		printf("The file %s has been read successful!\n", input_file);
+//    }
+//
+//    MPI_File_close(&fh);
+//
+//    // For other variables except first one, just copy the data of first variable.
+//	for (int var = 1; var < variable_count; var++)
+//	{
+//		data[var] = (unsigned char *)malloc(sizeof(*(data[var])) * size * (bpv[var]/8) * vps[var]);
+//		memcpy(data[var], data[0], sizeof(*(data[var])) * size * (bpv[var]/8) * vps[var]);
+//	}
+//}
+
+
+
 void
 data_free(write_pattern mode, void *data)
 {
@@ -636,11 +863,15 @@ _prepare_data(bench_params params, hid_t *filespace_out, hid_t *memspace_out,
     hid_t filespace, memspace;
     *data_preparation_time = 0;
 
+    //	read_data_1D(params, &data_size);
+
     //    unsigned long data_size;
     unsigned long long particle_cnt    = params.num_particles;
     unsigned long      actual_elem_cnt = 0; // only for set_select_spaces_strided()
     int                dset_cnt        = 0;
     unsigned long      t_prep_start    = get_time_usec();
+
+
     switch (params.access_pattern.pattern_write) {
         case CONTIG_CONTIG_1D:
             set_select_spaces_default(filespace_out, memspace_out);
@@ -707,6 +938,15 @@ _prepare_data(bench_params params, hid_t *filespace_out, hid_t *memspace_out,
                                                   data_size);
             dset_cnt = 8;
             break;
+
+        //// KE
+        case CONTIG_INPUT_1D:
+        	set_select_spaces_default(filespace_out, memspace_out);
+			data     = (void *)read_data_1D(params, data_size);
+			dset_cnt = 8;
+			break;
+
+//        	printf("CONTIG_INPUT_1D\n");
         default:
             assert(0 && "this mode is not yet implemented");
             break;
@@ -971,6 +1211,7 @@ print_usage(char *name)
     }
 }
 
+
 int
 main(int argc, char *argv[])
 {
@@ -1011,6 +1252,10 @@ main(int argc, char *argv[])
             printf("Configuration file read failed. Please, check %s\n", cfg_file_path);
         return 0;
     }
+
+	if (params.P_d1 * params.P_d2 * params.P_d3 != NUM_RANKS)
+		return -1;
+
 
     if (params.io_op != IO_WRITE) {
         if (MY_RANK == 0)
@@ -1097,6 +1342,7 @@ main(int argc, char *argv[])
     }
     unsigned long tfopen_end = get_time_usec();
 
+
     if (MY_RANK == 0)
         printf("Opened HDF5 file... \n");
 
@@ -1120,6 +1366,8 @@ main(int argc, char *argv[])
     H5Fflush(file_id, H5F_SCOPE_LOCAL);
     MPI_Barrier(MPI_COMM_WORLD);
     unsigned long tflush_end = get_time_usec();
+
+    unsigned long write_flush_time = tflush_end - t2; // print out (new)
 
     unsigned long tfclose_start = get_time_usec();
 
@@ -1166,6 +1414,9 @@ main(int argc, char *argv[])
 
         float fclose_time_s = (float)(tfclose_end - tfclose_start) / (1000.0 * 1000.0);
         printf("H5Fclose() time: %.3f s\n", fclose_time_s);
+
+        /// ke
+        printf("Write + flush time: %.3f s\n", (write_flush_time / (1000.0 * 1000.0)) );
 
         float oct_s = (float)(t4 - t1) / (1000.0 * 1000.0);
         printf("Observed completion time: %.3f s\n", oct_s);
