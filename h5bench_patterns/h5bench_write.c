@@ -863,8 +863,6 @@ _prepare_data(bench_params params, hid_t *filespace_out, hid_t *memspace_out,
     hid_t filespace, memspace;
     *data_preparation_time = 0;
 
-    //	read_data_1D(params, &data_size);
-
     //    unsigned long data_size;
     unsigned long long particle_cnt    = params.num_particles;
     unsigned long      actual_elem_cnt = 0; // only for set_select_spaces_strided()
@@ -1025,6 +1023,7 @@ _run_benchmark_write(bench_params params, hid_t file_id, hid_t fapl, hid_t files
             case CONTIG_CONTIG_1D:
             case CONTIG_CONTIG_2D:
             case CONTIG_CONTIG_3D:
+            case CONTIG_INPUT_1D:
             case CONTIG_CONTIG_STRIDED_1D:
                 data_write_contig_contig_MD_array(ts, ts->grp_id, ts->dset_ids, filespace, memspace, plist_id,
                                                   (data_contig_md *)data, &meta_time4, &data_time_exp);
@@ -1367,8 +1366,6 @@ main(int argc, char *argv[])
     MPI_Barrier(MPI_COMM_WORLD);
     unsigned long tflush_end = get_time_usec();
 
-    unsigned long write_flush_time = tflush_end - t2; // print out (new)
-
     unsigned long tfclose_start = get_time_usec();
 
     H5Fclose_async(file_id, 0);
@@ -1415,8 +1412,9 @@ main(int argc, char *argv[])
         float fclose_time_s = (float)(tfclose_end - tfclose_start) / (1000.0 * 1000.0);
         printf("H5Fclose() time: %.3f s\n", fclose_time_s);
 
-        /// ke
-        printf("Write + flush time: %.3f s\n", (write_flush_time / (1000.0 * 1000.0)) );
+        /// KE
+        float write_flush_time = (float)(tflush_end - t2) / (1000.0 * 1000.0);
+        printf("Write + flush time: %.3f s\n", write_flush_time);
 
         float oct_s = (float)(t4 - t1) / (1000.0 * 1000.0);
         printf("Observed completion time: %.3f s\n", oct_s);
