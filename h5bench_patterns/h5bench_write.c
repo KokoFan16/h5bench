@@ -499,7 +499,7 @@ int read_file_parallel_3D(char* filename, bench_params params, char *buf) {
 	}
 
 	MPI_File_close(&fh);
-	free(subarray);
+	MPI_Type_free(&subarray);
 
 	return 0;
 }
