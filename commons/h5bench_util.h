@@ -138,15 +138,28 @@ typedef struct bench_params {
     unsigned long align_len;
 
     //// KE
-    char *        x_path;
-    char *        y_path;
-    char *        z_path;
-    char *        px_path;
-    char *        py_path;
-    char *        pz_path;
+//    char *        x_path;
+//    char *        y_path;
+//    char *        z_path;
+//    char *        px_path;
+//    char *        py_path;
+//    char *        pz_path;
     int           P_d1;
     int           P_d2;
     int           P_d3;
+    int           num_fields;
+    char *        field_path;
+    char *        field_vars;
+    char *        field_dimens;
+    char *        field_types;
+    int           global_d1;
+    int           global_d2;
+    int           global_d3;
+    int           local_d1;
+    int           local_d2;
+    int           local_d3;
+    int           type_size;
+
 
 } bench_params;
 
@@ -157,6 +170,7 @@ typedef struct data_md {
     float *            px, *py, *pz;
     int *              id_1;
     float *            id_2;
+    char **            real_data;
 } data_contig_md;
 
 typedef struct csv_hanle {

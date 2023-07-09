@@ -955,24 +955,24 @@ _set_params(char *key, char *val_in, bench_params *params_in_out, int do_write)
             return -1;
         }
     }
-    else if (strcmp(key, "X_PATH") == 0) { /// KE
-    	(*params_in_out).x_path = strdup(val);
-    }
-    else if (strcmp(key, "Y_PATH") == 0) { /// KE
-    	(*params_in_out).y_path = strdup(val);
-    }
-    else if (strcmp(key, "Z_PATH") == 0) { /// KE
-    	(*params_in_out).z_path = strdup(val);
-    }
-    else if (strcmp(key, "PX_PATH") == 0) { /// KE
-    	(*params_in_out).px_path = strdup(val);
-    }
-    else if (strcmp(key, "PY_PATH") == 0) { /// KE
-    	(*params_in_out).py_path = strdup(val);
-    }
-    else if (strcmp(key, "PZ_PATH") == 0) { /// KE
-    	(*params_in_out).pz_path = strdup(val);
-    }
+//    else if (strcmp(key, "X_PATH") == 0) { /// KE
+//    	(*params_in_out).x_path = strdup(val);
+//    }
+//    else if (strcmp(key, "Y_PATH") == 0) { /// KE
+//    	(*params_in_out).y_path = strdup(val);
+//    }
+//    else if (strcmp(key, "Z_PATH") == 0) { /// KE
+//    	(*params_in_out).z_path = strdup(val);
+//    }
+//    else if (strcmp(key, "PX_PATH") == 0) { /// KE
+//    	(*params_in_out).px_path = strdup(val);
+//    }
+//    else if (strcmp(key, "PY_PATH") == 0) { /// KE
+//    	(*params_in_out).py_path = strdup(val);
+//    }
+//    else if (strcmp(key, "PZ_PATH") == 0) { /// KE
+//    	(*params_in_out).pz_path = strdup(val);
+//    }
     else if (strcmp(key, "P_D1") == 0) { /// KE
     	(*params_in_out).P_d1 = atoi(val);
     }
@@ -981,6 +981,21 @@ _set_params(char *key, char *val_in, bench_params *params_in_out, int do_write)
     }
     else if (strcmp(key, "P_D3") == 0) { /// KE
     	(*params_in_out).P_d3 = atoi(val);
+    }
+    else if (strcmp(key, "NFIELD") == 0) { /// KE
+    	(*params_in_out).num_fields = atoi(val);
+    }
+    else if (strcmp(key, "FIELD_PATH") == 0) { /// KE
+    	(*params_in_out).field_path = strdup(val);
+    }
+    else if (strcmp(key, "FIELD_VARS") == 0) { /// KE
+    	(*params_in_out).field_vars = strdup(val);
+    }
+    else if (strcmp(key, "FIELD_DIMENS") == 0) { /// KE
+    	(*params_in_out).field_dimens = strdup(val);
+    }
+    else if (strcmp(key, "FIELD_TYPES") == 0) { /// KE
+    	(*params_in_out).field_types = strdup(val);
     }
     else {
         printf("Unknown Parameter: %s\n", key);
@@ -1044,15 +1059,28 @@ bench_params_init(bench_params *params_out)
 
 
     //// KE
-    (*params_out).x_path   = NULL;
-    (*params_out).y_path   = NULL;
-    (*params_out).z_path   = NULL;
-    (*params_out).px_path  = NULL;
-    (*params_out).py_path  = NULL;
-    (*params_out).pz_path  = NULL;
+//    (*params_out).x_path   = NULL;
+//    (*params_out).y_path   = NULL;
+//    (*params_out).z_path   = NULL;
+//    (*params_out).px_path  = NULL;
+//    (*params_out).py_path  = NULL;
+//    (*params_out).pz_path  = NULL;
     (*params_out).P_d1 = 0;
     (*params_out).P_d2 = 0;
     (*params_out).P_d3 = 0;
+    (*params_out).num_fields = 0;
+    (*params_out).field_path = NULL;
+    (*params_out).field_dimens = NULL;
+    (*params_out).field_vars = NULL;
+    (*params_out).field_types = NULL;
+    (*params_out).global_d1 = 0;
+    (*params_out).global_d2 = 0;
+    (*params_out).global_d3 = 0;
+    (*params_out).local_d1 = 0;
+    (*params_out).local_d2 = 0;
+    (*params_out).local_d3 = 0;
+    (*params_out).type_size = 0;
+
 }
 
 int
@@ -1185,13 +1213,19 @@ print_params(const bench_params *p)
         printf("Use Subfiling: %s\n", p->subfiling == 1 ? "YES" : "NO");
     }
     printf("Number of dimensions: %d\n", p->num_dims);
-    printf("    Dim_1: %lu\n", p->dim_1);
-    if (p->num_dims >= 2) {
-        printf("    Dim_2: %lu\n", p->dim_2);
-    }
-    if (p->num_dims >= 3) {
-        printf("    Dim_3: %lu\n", p->dim_3);
-    }
+    printf("Read Path: %s\n", p->field_path);
+    printf("Fields Variables: %s\n", p->field_vars);
+    printf("Fields dimensions: %s\n", p->field_dimens);
+    printf("Fields data types: %s\n", p->field_types);
+
+
+//    printf("    Dim_1: %lu\n", p->dim_1);
+//    if (p->num_dims >= 2) {
+//        printf("    Dim_2: %lu\n", p->dim_2);
+//    }
+//    if (p->num_dims >= 3) {
+//        printf("    Dim_3: %lu\n", p->dim_3);
+//    }
 
     if (p->access_pattern.pattern_read == STRIDED_1D ||
         p->access_pattern.pattern_write == CONTIG_CONTIG_STRIDED_1D) {
