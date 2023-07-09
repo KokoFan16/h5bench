@@ -1217,6 +1217,7 @@ print_params(const bench_params *p)
     printf("Fields Variables: %s\n", p->field_vars);
     printf("Fields dimensions: %s\n", p->field_dimens);
     printf("Fields data types: %s\n", p->field_types);
+    printf("Processes partition: %d, %d, %d\n", p->P_d1, p->P_d2, p->P_d3);
 
 
 //    printf("    Dim_1: %lu\n", p->dim_1);
