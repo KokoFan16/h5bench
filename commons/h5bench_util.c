@@ -1241,7 +1241,7 @@ print_params(const bench_params *p)
         if (p->num_dims >= 2) {
             printf("    chunk_dim2: %lu\n", p->chunk_dim_2);
         }
-        else if (p->num_dims >= 3) {
+        if (p->num_dims >= 3) {
             printf("    chunk_dim3: %lu\n", p->chunk_dim_3);
         }
     }
