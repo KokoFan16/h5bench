@@ -158,6 +158,9 @@ typedef struct bench_params {
     int           local_d1;
     int           local_d2;
     int           local_d3;
+    int           local_ofst1;
+    int           local_ofst2;
+    int           local_ofst3;
     int           type_size;
 
 

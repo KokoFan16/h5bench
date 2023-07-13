@@ -1080,7 +1080,9 @@ bench_params_init(bench_params *params_out)
     (*params_out).local_d2 = 0;
     (*params_out).local_d3 = 0;
     (*params_out).type_size = 0;
-
+    (*params_out).local_ofst1 = 0;
+    (*params_out).local_ofst2 = 0;
+    (*params_out).local_ofst3 = 0;
 }
 
 int

@@ -311,57 +311,119 @@ prepare_data_contig_3D(unsigned long long particle_cnt, long dim_1, long dim_2, 
 
 ////// KE
 void split_strs(char** strs, char* in_str, char* delim) {
+	char * copy = malloc(strlen(in_str) + 1);
+	strcpy(copy, in_str);
 	char *pt;
-	pt = strtok(in_str, delim);
+	pt = strtok(copy, delim);
 	int i = 0;
 	while (pt != NULL) {
 		strs[i] = strdup(pt);
 	    pt = strtok (NULL, delim);
 		i++;
 	}
+	free(copy);
 }
 
 ////// KE
-int get_datatype_size(char* type, int *size){
+int get_datatype_size(char* type, int *size, MPI_Datatype* mpi_type){
 
 	if (strcmp(type, "char") == 0) {
 		*size = sizeof(char);
+		*mpi_type = MPI_CHAR;
 	}
 	else if (strcmp(type, "unsigned char") == 0) {
 		*size = sizeof(unsigned char);
+		*mpi_type = MPI_UNSIGNED_CHAR;
 	}
 	else if (strcmp(type, "signed char") == 0) {
 		*size = sizeof(signed char);
+		*mpi_type = MPI_SIGNED_CHAR;
 	}
 	else if (strcmp(type, "int") == 0) {
 		*size = sizeof(int);
+		*mpi_type = MPI_INT;
 	}
 	else if (strcmp(type, "unsigned int") == 0) {
 		*size = sizeof(unsigned int);
+		*mpi_type = MPI_UNSIGNED;
 	}
 	else if (strcmp(type, "short") == 0) {
 		*size = sizeof(short);
+		*mpi_type = MPI_SHORT;
 	}
 	else if (strcmp(type, "unsigned short") == 0) {
 		*size = sizeof(unsigned short);
+		*mpi_type = MPI_UNSIGNED_SHORT;
 	}
 	else if (strcmp(type, "long") == 0) {
 		*size = sizeof(long);
+		*mpi_type = MPI_LONG;
 	}
 	else if (strcmp(type, "unsigned long") == 0) {
 		*size = sizeof(unsigned long);
+		*mpi_type = MPI_UNSIGNED_LONG;
 	}
 	else if (strcmp(type, "float") == 0) {
 		*size = sizeof(float);
+		*mpi_type = MPI_FLOAT;
 	}
 	else if (strcmp(type, "double") == 0) {
 		*size = sizeof(double);
+		*mpi_type = MPI_DOUBLE;
 	}
 	else if (strcmp(type, "long double") == 0) {
 		*size = sizeof(long double);
+		*mpi_type = MPI_LONG_DOUBLE;
 	}
 	else {
 		printf("Unsupported datatype of input dataset.\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+
+int get_H5_datatype(char* type, hid_t* h5_data_type){
+
+	if (strcmp(type, "char") == 0) {
+		*h5_data_type = H5T_NATIVE_CHAR;
+	}
+	else if (strcmp(type, "unsigned char") == 0) {
+		*h5_data_type = H5T_NATIVE_UCHAR;
+	}
+	else if (strcmp(type, "signed char") == 0) {
+		*h5_data_type = H5T_NATIVE_SCHAR;
+	}
+	else if (strcmp(type, "int") == 0) {
+		*h5_data_type = H5T_NATIVE_INT;
+	}
+	else if (strcmp(type, "unsigned int") == 0) {
+		*h5_data_type = H5T_NATIVE_UINT;
+	}
+	else if (strcmp(type, "short") == 0) {
+		*h5_data_type = H5T_NATIVE_SHORT;
+	}
+	else if (strcmp(type, "unsigned short") == 0) {
+		*h5_data_type = H5T_NATIVE_USHORT;
+	}
+	else if (strcmp(type, "long") == 0) {
+		*h5_data_type = H5T_NATIVE_LONG;
+	}
+	else if (strcmp(type, "unsigned long") == 0) {
+		*h5_data_type = H5T_NATIVE_ULONG;
+	}
+	else if (strcmp(type, "float") == 0) {
+		*h5_data_type = H5T_NATIVE_FLOAT;
+	}
+	else if (strcmp(type, "double") == 0) {
+		*h5_data_type = H5T_NATIVE_DOUBLE;
+	}
+	else if (strcmp(type, "long double") == 0) {
+		*h5_data_type = H5T_NATIVE_LLONG;
+	}
+	else {
+		printf("Unsupported H5 datatype.\n");
 		return -1;
 	}
 
@@ -450,31 +512,31 @@ data_contig_md* read_data_1D(bench_params params, unsigned long *data_size_out)
 
 ///// KE
 // Read 3D files
-int read_file_parallel_3D(char* filename, bench_params params, char *buf) {
+int read_file_parallel_3D(char* filename, bench_params params, char *buf, MPI_Datatype* mpi_type) {
 
 
-	int local_box_offset[3];
-	local_box_offset[2] = (MY_RANK / (params.P_d1 * params.P_d2 )) * params.local_d3;
-	int slice = MY_RANK % (params.P_d1 * params.P_d2);
-	local_box_offset[1] = (slice / params.P_d1) * params.local_d2;
-	local_box_offset[0] = (slice % params.P_d1) * params.local_d1;
+//	int local_box_offset[3];
+//	local_box_offset[2] = (MY_RANK / (params.P_d1 * params.P_d2 )) * params.local_d3;
+//	int slice = MY_RANK % (params.P_d1 * params.P_d2);
+//	local_box_offset[1] = (slice / params.P_d1) * params.local_d2;
+//	local_box_offset[0] = (slice % params.P_d1) * params.local_d1;
 
-	int tmp_global_box[3] = {params.global_d1 * params.type_size, params.global_d2, params.global_d3};
-	int tmp_local_box[3] = {params.local_d1 * params.type_size, params.local_d2, params.local_d3};
-	int tmp_local_offset[3] = {local_box_offset[0] * params.type_size, local_box_offset[1], local_box_offset[2]};
+	int tmp_global_box[3] = {params.global_d1, params.global_d2, params.global_d3};
+	int tmp_local_box[3] = {params.local_d1, params.local_d2, params.local_d3};
+	int tmp_local_offset[3] = {params.local_ofst1, params.local_ofst2, params.local_ofst3};
 
-	if (params.local_d1 + local_box_offset[0] > params.global_d1)
-		tmp_local_offset[0] = (params.global_d1 - local_box_offset[0]) * params.type_size;
-	if (params.local_d2 + local_box_offset[1] > params.global_d2)
-		tmp_local_offset[1] = params.global_d2 - local_box_offset[1];
-	if (params.local_d3 + local_box_offset[2] > params.global_d3)
-		tmp_local_offset[2] = params.global_d3 - local_box_offset[2];
+//	if (params.local_d1 + local_box_offset[0] > params.global_d1)
+//		tmp_local_offset[0] = (params.global_d1 - local_box_offset[0]) * params.type_size;
+//	if (params.local_d2 + local_box_offset[1] > params.global_d2)
+//		tmp_local_offset[1] = params.global_d2 - local_box_offset[1];
+//	if (params.local_d3 + local_box_offset[2] > params.global_d3)
+//		tmp_local_offset[2] = params.global_d3 - local_box_offset[2];
 
 //	printf("%d, %dx%dx%d, %dx%dx%d\n", MY_RANK, tmp_local_offset[0], tmp_local_offset[1], tmp_local_offset[2], tmp_local_box[0], tmp_local_box[1], tmp_local_box[2]);
 
 	// Self-define MPI data type
 	MPI_Datatype subarray;
-	MPI_Type_create_subarray(3, tmp_global_box, tmp_local_box, tmp_local_offset, MPI_ORDER_FORTRAN, MPI_CHAR, &subarray);
+	MPI_Type_create_subarray(3, tmp_global_box, tmp_local_box, tmp_local_offset, MPI_ORDER_FORTRAN, *mpi_type, &subarray);
 	MPI_Type_commit(&subarray);
 
 
@@ -482,12 +544,12 @@ int read_file_parallel_3D(char* filename, bench_params params, char *buf) {
 	MPI_Status status;
 	int count = 0;
 
-	unsigned long long local_size = params.local_d1 * params.local_d2 * params.local_d3 * params.type_size;
+	unsigned long long local_size = params.local_d1 * params.local_d2 * params.local_d3;
 
 	MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
-	MPI_File_set_view(fh, 0, MPI_CHAR, subarray, "native", MPI_INFO_NULL);
-	MPI_File_read(fh, buf, local_size, MPI_CHAR, &status);
-	MPI_Get_count(&status, MPI_CHAR, &count);
+	MPI_File_set_view(fh, 0, *mpi_type, subarray, "native", MPI_INFO_NULL);
+	MPI_File_read(fh, buf, local_size, *mpi_type, &status);
+	MPI_Get_count(&status, *mpi_type, &count);
 	if (count != local_size) {
 		printf("ERROR: Read file %s failed with size %d!\n", filename, count);
 		return -1;
@@ -502,6 +564,35 @@ int read_file_parallel_3D(char* filename, bench_params params, char *buf) {
 	MPI_Type_free(&subarray);
 
 	return 0;
+}
+
+
+int
+set_select_space_multi_3D_array_real(hid_t *filespace_out, hid_t *memspace_out, bench_params params)
+{
+    hsize_t mem_dims[3];
+    hsize_t file_dims[3];
+    mem_dims[0]  = (hsize_t)params.local_d1;
+    mem_dims[1]  = (hsize_t)params.local_d2;
+    mem_dims[2]  = (hsize_t)params.local_d3;
+    file_dims[0] = (hsize_t)params.local_d1 * params.P_d1;
+    file_dims[1] = (hsize_t)params.local_d2 * params.P_d2;
+    file_dims[2] = (hsize_t)params.local_d3 * params.P_d3;
+
+    hsize_t count[3] = {1, 1, 1};
+    hsize_t file_starts[3], file_range[3]; // select start point and range in each dimension.
+    file_starts[0] = params.local_ofst1;
+    file_starts[1] = params.local_ofst2;
+    file_starts[2] = params.local_ofst3;
+    file_range[0]  = params.local_d1;
+    file_range[1]  = params.local_d2;
+    file_range[2]  = params.local_d3;
+
+    *filespace_out = H5Screate_simple(3, file_dims, NULL);
+    *memspace_out  = H5Screate_simple(3, mem_dims, NULL);
+
+    H5Sselect_hyperslab(*filespace_out, H5S_SELECT_SET, file_starts, NULL, count, file_range);
+    return 0;
 }
 
 
@@ -529,8 +620,15 @@ data_contig_md* read_data_3D(hid_t *filespace_out, hid_t *memspace_out, bench_pa
 	char *dimens[params.num_fields];
 	split_strs(dimens, params.field_dimens, ",");
 
+    if (MY_RANK == 0)
+    	printf("Before: types -- %s\n", params.field_types);
+
 	char *types[params.num_fields];
 	split_strs(types, params.field_types, ",");
+
+
+    if (MY_RANK == 0)
+    	printf("After: types -- %s\n", params.field_types);
 
 
     char INPUT_PATH[512];
@@ -554,10 +652,9 @@ data_contig_md* read_data_3D(hid_t *filespace_out, hid_t *memspace_out, bench_pa
 
 
 		int type_size = 0;
-		get_datatype_size(types[i], &type_size);
-//    	if (MY_RANK == 0) {
-//    		printf("type size -- %d\n", type_size);
-//    	}
+		MPI_Datatype mpi_type;
+		get_datatype_size(types[i], &type_size, &mpi_type);
+
     	params.type_size = type_size;
 
     	int field_local_dim_0 = field_dim_0 / params.P_d1;
@@ -567,14 +664,30 @@ data_contig_md* read_data_3D(hid_t *filespace_out, hid_t *memspace_out, bench_pa
     	params.local_d2 = field_local_dim_1;
     	params.local_d3 = field_local_dim_2;
 
-        set_select_space_multi_3D_array(filespace_out, memspace_out, params.local_d1, params.local_d2, params.local_d3);
+
+//    	int local_box_offset[3];
+    	params.local_ofst3 = (MY_RANK / (params.P_d1 * params.P_d2 )) * params.local_d3;
+    	int slice = MY_RANK % (params.P_d1 * params.P_d2);
+    	params.local_ofst2 = (slice / params.P_d1) * params.local_d2;
+    	params.local_ofst1 = (slice % params.P_d1) * params.local_d1;
+
+    	if (params.local_d1 + params.local_ofst1 > params.global_d1)
+    		params.local_ofst1 = params.global_d1 - params.local_ofst1;
+    	if (params.local_d2 + params.local_ofst2 > params.global_d2)
+    		params.local_ofst2 = params.global_d2 - params.local_ofst2;
+    	if (params.local_d3 + params.local_ofst3 > params.global_d3)
+    		params.local_ofst3 = params.global_d3 - params.local_ofst3;
+
+
+
+    	set_select_space_multi_3D_array_real(filespace_out, memspace_out, params);
 
 //    	printf("field_local_dim -- %d, %d, %d\n", field_local_dim_0, field_local_dim_1, field_local_dim_2);
 
     	unsigned long field_local_data_size = field_local_dim_0 * field_local_dim_1 * field_local_dim_2 * type_size;
 		data_out->real_data[i] = (char *)malloc(field_local_data_size);
 
-		int stat = read_file_parallel_3D(INPUT_PATH, params, data_out->real_data[i]);
+		int stat = read_file_parallel_3D(INPUT_PATH, params, data_out->real_data[i], &mpi_type);
 
 
 
@@ -590,7 +703,7 @@ data_contig_md* read_data_3D(hid_t *filespace_out, hid_t *memspace_out, bench_pa
 void
 data_write_real_contig_contig_MD_array(time_step *ts, hid_t loc, hid_t *dset_ids, hid_t filespace, hid_t memspace,
                                   hid_t plist_id, data_contig_md *data_in, unsigned long *metadata_time,
-                                  unsigned long *data_time, int num_fields)
+                                  unsigned long *data_time, bench_params params)
 {
     assert(data_in && data_in->real_data);
     hid_t dcpl;
@@ -605,21 +718,29 @@ data_write_real_contig_contig_MD_array(time_step *ts, hid_t loc, hid_t *dset_ids
                    COMPRESS_INFO.chunk_dims[1]);
     }
 
+	char *types[params.num_fields];
+	split_strs(types, params.field_types, ",");
+
     *metadata_time = 0;
     *data_time = 0;
-    for (int i = 0; i < num_fields; i++) {
+    for (int i = 0; i < params.num_fields; i++) {
 
         unsigned t1 = get_time_usec();
         char name[50];
         sprintf(name, "%d", i);
 
-    	dset_ids[i] = H5Dcreate_async(loc, name, H5T_NATIVE_CHAR, filespace, H5P_DEFAULT, dcpl, H5P_DEFAULT,
+        hid_t h5_data_type;
+        get_H5_datatype(types[i], &h5_data_type);
+
+    	dset_ids[i] = H5Dcreate_async(loc, name, h5_data_type, filespace, H5P_DEFAULT, dcpl, H5P_DEFAULT,
     	                                  ts->es_meta_create);
+
     	unsigned t2 = get_time_usec();
     	*metadata_time += (t2 - t1);
 
+        ierr = H5Dwrite_async(dset_ids[i], h5_data_type, memspace, filespace, plist_id, data_in->real_data[i],
+        		ts->es_data);
 
-        ierr = H5Dwrite_async(dset_ids[i], H5T_NATIVE_CHAR, memspace, filespace, plist_id, data_in->real_data[i], ts->es_data);
         unsigned t3 = get_time_usec();
         *data_time += (t3 - t2);
     }
@@ -1146,8 +1267,7 @@ _run_benchmark_write(bench_params params, hid_t file_id, hid_t fapl, hid_t files
 
             case CONTIG_INPUT_3D:
             	data_write_real_contig_contig_MD_array(ts, ts->grp_id, ts->dset_ids, filespace, memspace, plist_id,
-                                                  (data_contig_md *)data, &meta_time4, &data_time_exp,
-												  params.num_fields);
+                                                  (data_contig_md *)data, &meta_time4, &data_time_exp, params);
             	break;
 
 
